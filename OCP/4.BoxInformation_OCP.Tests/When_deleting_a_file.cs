@@ -1,0 +1,53 @@
+﻿using System.Data;
+using BoxInformation.Interfaces;
+using BoxInformation.Model;
+using NSubstitute;
+using NUnit.Framework;
+
+namespace _4.BoxInformation_OCP.Tests
+{
+    [TestFixture]
+    public class When_deleting_a_file
+    {
+        private IDataAccess fakeDataAccess;
+        private IRecordView fakeView;
+        private BoxEntry target;
+
+        [SetUp]
+        public void Setup()
+        {
+            fakeDataAccess = Substitute.For<IDataAccess>();
+            fakeView = Substitute.For<IRecordView>();
+            target = new BoxEntry(fakeDataAccess);
+            target.View = fakeView;
+        }
+
+
+        [Test]
+        public void Should_call_data_access_layer()
+        {
+            target.DeleteManifest();
+
+            fakeDataAccess.ReceivedWithAnyArgs().ExecuteNonQuery(Arg.Any<string>(), Arg.Any<CommandType>(), Arg.Any<IDbDataParameter[]>());
+        }
+     
+        [Test]
+        public void Should_pass_correct_stored_proc_name()
+        {
+            target.DeleteManifest();
+
+            fakeDataAccess.Received().ExecuteNonQuery("DeleteFile1", CommandType.StoredProcedure, Arg.Any<IDbDataParameter[]>());
+        }
+
+        [Test]
+        public void Should_create_parameter()
+        {
+            fakeView.Id.Returns("1");
+
+            target.DeleteManifest();
+
+            fakeDataAccess.Received().CreateParameter("@ID", "1");
+        }
+
+    }
+}
